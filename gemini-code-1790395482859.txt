@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.3 English Listening Test (TOEIC Style)</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --correct: #16a34a;
+            --wrong: #dc2626;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        header h1 { margin: 0 0 8px 0; font-size: 1.6rem; }
+        header p { margin: 0; opacity: 0.9; }
+
+        .score-board {
+            position: sticky;
+            top: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .section-title {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 24px 0 16px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .audio-btn {
+            background-color: #059669;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .audio-btn:hover { background-color: #047857; }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0;
+        }
+
+        .option-item {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-item:hover:not(.disabled) { background-color: #f1f5f9; }
+        .option-item.disabled { cursor: default; }
+        .option-item.correct { background-color: #dcfce7; border-color: var(--correct); color: #14532d; font-weight: bold; }
+        .option-item.wrong { background-color: #fee2e2; border-color: var(--wrong); color: #7f1d1d; }
+
+        .explanation {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-left: 3px solid var(--primary);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .explanation.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎧 M.3 English Listening Test</h1>
+        <p>แบบทดสอบการฟังภาษาอังกฤษ ชั้น ม.3 (สไตล์ TOEIC - 15 ข้อ)</p>
+    </header>
+
+    <div class="score-board">
+        <span>ความคืบหน้า: <span id="progress">0/15</span></span>
+        <span style="color: var(--primary);">คะแนน: <span id="score">0</span> / 15</span>
+    </div>
+
+    <div id="quiz-container"></div>
+</div>
+
+<script>
+const quizData = [
+    // PART 1: Question-Response (ข้อ 1-5)
+    {
+        section: "Part 1: Question-Response (ฟังคำถาม แล้วเลือกคำตอบที่ถูกต้องที่สุด)",
+        audioText: "Question number 1. Where did you put the science textbook?",
+        question: "1. Listen to Question 1 and select the best response.",
+        options: [
+            "A) On the top shelf near the desk.",
+            "B) Yes, I like science very much.",
+            "C) Tomorrow afternoon."
+        ],
+        answer: 0,
+        script: "<b>Q:</b> Where did you put the science textbook?<br><b>A)</b> On the top shelf near the desk. (ตอบตรงคำถาม Where)",
+        exp: "คำถามถามว่า 'คุณวางหนังสือเรียนวิชาวิทยาศาสตร์ไว้ที่ไหน' ตอบ A บอกสถานที่วางถูกต้อง"
+    },
+    {
+        audioText: "Question number 2. When is the English project due?",
+        question: "2. Listen to Question 2 and select the best response.",
+        options: [
+            "A) In Room 302.",
+            "B) Next Friday before 4 PM.",
+            "C) Mr. David is our teacher."
+        ],
+        answer: 1,
+        script: "<b>Q:</b> When is the English project due?<br><b>B)</b> Next Friday before 4 PM.",
+        exp: "คำถามถามว่า 'รายงานวิชาภาษาอังกฤษกำหนดส่งเมื่อไหร่' (When) ตอบ B บอกวันและเวลาถูกต้อง"
+    },
+    {
+        audioText: "Question number 3. Why were you absent from class yesterday?",
+        question: "3. Listen to Question 3 and select the best response.",
+        options: [
+            "A) I went to the shopping mall.",
+            "B) Because I had a high fever.",
+            "C) Yes, I finished my homework."
+        ],
+        answer: 1,
+        script: "<b>Q:</b> Why were you absent from class yesterday?<br><b>B)</b> Because I had a high fever.",
+        exp: "คำถามถามเหตุผลที่ขาดเรียน (Why) ตอบ B บอกเหตุผลว่ามีไข้สูง"
+    },
+    {
+        audioText: "Question number 4. How long does it take to travel from your home to school?",
+        question: "4. Listen to Question 4 and select the best response.",
+        options: [
+            "A) About twenty minutes by bus.",
+            "B) I usually go with my friends.",
+            "C) Every Monday morning."
+        ],
+        answer: 0,
+        script: "<b>Q:</b> How long does it take to travel from your home to school?<br><b>A)</b> About twenty minutes by bus.",
+        exp: "คำถามถามระยะเวลา (How long) ตอบ A บอกเวลาประมาณ 20 นาที"
+    },
+    {
+        audioText: "Question number 5. Would you like to join our scout hiking activity this Saturday?",
+        question: "5. Listen to Question 5 and select the best response.",
+        options: [
+            "A) I prefer reading books.",
+            "B) I'd love to, but I have a doctor's appointment.",
+            "C) We hiked ten kilometers last week."
+        ],
+        answer: 1,
+        script: "<b>Q:</b> Would you like to join our scout hiking activity this Saturday?<br><b>B)</b> I'd love to, but I have a doctor's appointment.",
+        exp: "เป็นการชวนไปทำกิจกรรม ตอบ B ปฏิเสธอย่างสุภาพเนื่องจากมีนัดกับหมอ"
+    },
+
+    // PART 2: Short Conversations (ข้อ 6-10)
+    {
+        section: "Part 2: Short Conversations (ฟังบทสนทนาสั้น แล้วตอบคำถาม)",
+        audioText: "Conversation 1. Man: Excuse me, is the school library open today? Woman: Yes, but it closes early on Thursdays at 3:30 PM. Man: Oh, thanks. I need to return these two books before going home.",
+        question: "6. Why is the man going to the library?",
+        options: [
+            "A) To study for an exam",
+            "B) To return some books",
+            "C) To borrow a new computer"
+        ],
+        answer: 1,
+        script: "<b>Dialogue:</b><br>Man: Is the library open today?<br>Woman: Yes, but it closes early on Thursdays at 3:30 PM.<br>Man: I need to return these two books before going home.",
+        exp: "ผู้ชายพูดในประโยคสุดท้ายว่าต้องการไปคืนหนังสือ 2 เล่ม"
+    },
+    {
+        audioText: "Conversation 2. Woman: Did you watch the football match last night? Man: No, I couldn't because I was preparing for the math quiz. Who won? Woman: Our school team won 2 to 1 in the last minute!",
+        question: "7. Why didn't the man watch the football match?",
+        options: [
+            "A) He was studying for a math test.",
+            "B) He went home late.",
+            "C) He was playing football himself."
+        ],
+        answer: 0,
+        script: "<b>Dialogue:</b><br>Man: I couldn't because I was preparing for the math quiz.",
+        exp: "ผู้ชายบอกว่าไม่ได้ดูเพราะเตรียมตัวสอบย่อยวิชาคณิตศาสตร์"
+    },
+    {
+        audioText: "Conversation 3. Man: Look at the heavy clouds! It looks like it's going to rain soon. Woman: Oh no, I forgot my umbrella in the classroom. Man: Don't worry, you can share mine to the bus stop.",
+        question: "8. What is the problem?",
+        options: [
+            "A) They missed the school bus.",
+            "B) The woman forgot her umbrella.",
+            "C) The classroom door is locked."
+        ],
+        answer: 1,
+        script: "<b>Dialogue:</b><br>Woman: Oh no, I forgot my umbrella in the classroom.",
+        exp: "ปัญหาคือผู้หญิงลืมร่มไว้ในห้องเรียน"
+    },
+    {
+        audioText: "Conversation 4. Woman: Are you ready for the English presentation tomorrow? Man: Almost, but I need to print out my slides first. Woman: You can use the printer in the staff room; Mr. Jackson gave us permission.",
+        question: "9. Where can the man print his slides?",
+        options: [
+            "A) In the computer lab",
+            "B) In the staff room",
+            "C) At his home"
+        ],
+        answer: 1,
+        script: "<b>Dialogue:</b><br>Woman: You can use the printer in the staff room...",
+        exp: "ผู้หญิงบอกว่าสามารถใช้เครื่องพิมพ์ในห้องพักครู (staff room) ได้"
+    },
+    {
+        audioText: "Conversation 5. Man: Hi Sarah, are you going to the school cafeteria for lunch? Woman: Not today. I brought my own lunch box with grilled chicken and rice. Man: That sounds healthy! Enjoy your meal.",
+        question: "10. What will the woman eat for lunch?",
+        options: [
+            "A) Food from the cafeteria",
+            "B) A home-made lunch box",
+            "C) Fast food from outside"
+        ],
+        answer: 1,
+        script: "<b>Dialogue:</b><br>Woman: I brought my own lunch box with grilled chicken and rice.",
+        exp: "ผู้หญิงห่อข้าวห่อมาจากบ้าน (home-made lunch box)"
+    },
+
+    // PART 3: Short Talks (ข้อ 11-15)
+    {
+        section: "Part 3: Short Announcements (ฟังประกาศสั้นๆ แล้วตอบคำถาม)",
+        audioText: "Announcement 1. Attention all students! The annual school sports day originally scheduled for this Friday has been postponed due to heavy rain forecasts. It will now take place next Monday, October 5th. Please bring your sports uniforms on that day.",
+        question: "11. Why was sports day postponed?",
+        options: [
+            "A) Due to bad weather forecasts",
+            "B) Because the stadium was closed",
+            "C) Teachers were busy"
+        ],
+        answer: 0,
+        script: "<b>Announcement:</b> ...has been postponed due to heavy rain forecasts.",
+        exp: "งานกีฬาสีถูกเลื่อนเนื่องจากมีพยากรณ์อากาศว่าฝนจะตกหนัก"
+    },
+    {
+        audioText: "Announcement 1 (Continued). Attention all students! The annual school sports day originally scheduled for this Friday has been postponed due to heavy rain forecasts. It will now take place next Monday, October 5th. Please bring your sports uniforms on that day.",
+        question: "12. When will the sports day take place?",
+        options: [
+            "A) This Friday",
+            "B) Next Monday",
+            "C) Next Friday"
+        ],
+        answer: 1,
+        script: "<b>Announcement:</b> It will now take place next Monday, October 5th.",
+        exp: "กำหนดการใหม่ถูกเลื่อนไปเป็นวันจันทร์หน้า"
+    },
+    {
+        audioText: "Announcement 2. Good morning, Grade 9 students. This is a reminder from the art department. Please submit your final drawing project by 3:00 PM today at Room 104. Late submissions will lose 5 points per day. Thank you.",
+        question: "13. Who is this announcement intended for?",
+        options: [
+            "A) All teachers",
+            "B) Grade 9 students",
+            "C) Grade 7 students"
+        ],
+        answer: 1,
+        script: "<b>Announcement:</b> Good morning, Grade 9 students...",
+        exp: "ประกาศนี้ส่งถึงนักเรียนชั้น ม.3 (Grade 9)"
+    },
+    {
+        audioText: "Announcement 2 (Continued). Good morning, Grade 9 students. This is a reminder from the art department. Please submit your final drawing project by 3:00 PM today at Room 104. Late submissions will lose 5 points per day. Thank you.",
+        question: "14. Where should students submit their art project?",
+        options: [
+            "A) Room 104",
+            "B) The library",
+            "C) The principal's office"
+        ],
+        answer: 0,
+        script: "<b>Announcement:</b> Please submit your final drawing project by 3:00 PM today at Room 104.",
+        exp: "ให้ส่งผลงานศิลปะที่ห้อง 104"
+    },
+    {
+        audioText: "Announcement 2 (Continued). Good morning, Grade 9 students. This is a reminder from the art department. Please submit your final drawing project by 3:00 PM today at Room 104. Late submissions will lose 5 points per day. Thank you.",
+        question: "15. What happens if a student submits the project late?",
+        options: [
+            "A) They will fail the course immediately.",
+            "B) They will lose 5 points per day.",
+            "C) They must redo the project."
+        ],
+        answer: 1,
+        script: "<b>Announcement:</b> Late submissions will lose 5 points per day.",
+        exp: "หากส่งช้าจะถูกหักวันละ 5 คะแนน"
+    }
+];
+
+let score = 0;
+let progress = 0;
+
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85; // ความเร็วสปีชระดับฟังง่ายสำหรับเด็ก
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("เบราว์เซอร์ของคุณไม่รองรับเสียงพูดอัตโนมัติ");
+    }
+}
+
+function renderQuiz() {
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = '';
+
+    quizData.forEach((q, idx) => {
+        if (q.section) {
+            const sec = document.createElement('div');
+            sec.className = 'section-title';
+            sec.innerText = q.section;
+            container.appendChild(sec);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'question-card';
+
+        let optionsHtml = '';
+        q.options.forEach((opt, optIdx) => {
+            optionsHtml += `<li class="option-item" onclick="checkAnswer(${idx}, ${optIdx})">${opt}</li>`;
+        });
+
+        card.innerHTML = `
+            <button class="audio-btn" onclick="speak('${q.audioText.replace(/'/g, "\\'")}')">
+                🔊 กดเพื่อฟังเสียงข้อที่ ${idx + 1}
+            </button>
+            <div><strong>${q.question}</strong></div>
+            <ul class="options-list" id="opts-${idx}">${optionsHtml}</ul>
+            <div class="explanation" id="exp-${idx}">
+                <div>${q.script}</div>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:8px 0;">
+                <div><b>เฉลย:</b> ${q.exp}</div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function checkAnswer(qIdx, selectedOpt) {
+    const optsContainer = document.getElementById(`opts-${qIdx}`);
+    const options = optsContainer.querySelectorAll('.option-item');
+    const exp = document.getElementById(`exp-${qIdx}`);
+    const qData = quizData[qIdx];
+
+    if (options[0].classList.contains('disabled')) return;
+
+    progress++;
+    document.getElementById('progress').innerText = `${progress}/15`;
+
+    options.forEach(opt => opt.classList.add('disabled'));
+
+    if (selectedOpt === qData.answer) {
+        options[selectedOpt].classList.add('correct');
+        score++;
+        document.getElementById('score').innerText = score;
+    } else {
+        options[selectedOpt].classList.add('wrong');
+        options[qData.answer].classList.add('correct');
+    }
+
+    exp.classList.add('visible');
+}
+
+window.onload = renderQuiz;
+</script>
+
+</body>
+</html>
